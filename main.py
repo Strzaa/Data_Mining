@@ -1,22 +1,19 @@
-#   IDEA    #
-#   1. PROPER
+#   IDEAS    #
 #   uzytkownicy (czas) = f1(czas)               DONE
 #   przychod (uzytkownicy) = f2(uzytkownicy)    DONE
 #   zatrudnienia (przychod) = f3(przychod)      TO DO
-#   prognoza zatrudnienia podając czas          TO DO
+#   prognoza zatrudnienia podając czas          DONE
 #   sprawdzenie prognoz ze stroną internetową   TO DO
 #   obliczenie parametrów                       TO DO
-#
-#   2. SIMPLE
-#   uzytkownicy (czas) = a1 * X + B             DONE
+
 
 import math
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-
 podstawa_log = 2
+
 
 def create_model(X_table, Y_table, rodzaj):
     X_matrix = X_table.to_numpy()
@@ -84,23 +81,23 @@ def func_wykl(a1, a0, x):
 
 
 if __name__ == "__main__":
-#   ZAŁADOWANIE EXEL
+    #   ZAŁADOWANIE EXEL
     exel_data = pd.read_excel("dane.xlsx", sheet_name="Arkusz1")
 
-#   TWORZENIE MODELI
-#   LICZBA_UZ (CZAS) - FUNKCJA LINIOWA
+    #   TWORZENIE MODELI
+    #   LICZBA_UZ (CZAS) - FUNKCJA LINIOWA
     a1_lin, a0_lin = create_model(exel_data[["Kwartał"]], exel_data["Liczba uzytkownikow"], "liniowy")
 
-#   PRZYCHOD (LICZBA_UZ) - FUNKCJA WYKLADNICZA
+    #   PRZYCHOD (LICZBA_UZ) - FUNKCJA WYKLADNICZA
     a1_wyk, a0_wyk = create_model(exel_data[["Liczba uzytkownikow"]], exel_data["Przychod"], "wykladniczy")
 
-#   PRZYCHOD POJEDYNCZY
-#   LICZBA UZYTKOWNIKOW W PRZYSZLOSCI DLA KWARTALU 45
+    #   PRZYCHOD POJEDYNCZY
+    #   LICZBA UZYTKOWNIKOW W PRZYSZLOSCI DLA KWARTALU 45
     print(func_liniowa(a1_lin, a0_lin, 45))
 
-#   PRZYCHOD NA PODSTAWIE UZYTKOWNIKÓW DLA LICZBY_UZYTKOWNIKÓW = 2200
+    #   PRZYCHOD NA PODSTAWIE UZYTKOWNIKÓW DLA LICZBY_UZYTKOWNIKÓW = 2200
     print(func_wykl(a1_wyk, a0_wyk, 2200))
 
-#   PRZYCHOD ŁĄCZONY
-#   PRZEWIDYWANY PRZYCHOD NA PODSTAWIE CZASU KWARTAL 45
+    #   PRZYCHOD ŁĄCZONY
+    #   PRZEWIDYWANY PRZYCHOD NA PODSTAWIE CZASU KWARTAL 45
     print(func_wykl(a1_wyk, a0_wyk, func_liniowa(a1_lin, a0_lin, 35)))
