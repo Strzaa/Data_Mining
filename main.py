@@ -1,7 +1,8 @@
 #   IDEA    #
 #   1. PROPER
-#   zysk(czas) = liczba_uz * X + przychód * X + Zatrudnienie * X + B
-#   X - czas (rok lub kwartały[1,2,3 ...])
+#   uzytkownicy (czas) = f1(czas)
+#   przychod (uzytkownicy) = f2(uzytkownicy)
+#   zatrudnienia (przychod) = f3(przychod)
 #
 #   2. SIMPLE
 #   uzytkownicy (czas) = a1 * X + B
@@ -11,34 +12,23 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def Simple():
-    exel_data = pd.read_excel("dane.xlsx", sheet_name="Arkusz1")
+#   zaraca a1 i a0 dla podanych danych
+def create_model(X_table, Y_table):
 
-    kwartal_matrix = exel_data[["Kwartał"]].to_numpy()
-    uz_matrix = exel_data["Liczba uzytkownikow"].to_numpy()
+    X_matrix = X_table.to_numpy()
+    Y_matrix = Y_table.to_numpy()
 
-    kwartal_matrix_1 = np.insert(kwartal_matrix, 0, 1, axis=1)
+    X_matrix_1 = np.insert(X_matrix, 0, 1, axis=1)
 
-    uz_matrix = np.array(uz_matrix).reshape(-1, 1)
+    Y_matrix = np.array(Y_matrix).reshape(-1, 1)
 
-    kwartal_matrix_t = np.transpose(kwartal_matrix_1)
+    X_matrix_t = np.transpose(X_matrix_1)
 
-    result_matrix = np.dot(np.dot(np.linalg.inv(np.dot(kwartal_matrix_t, kwartal_matrix_1)), kwartal_matrix_t), uz_matrix)
+    result_matrix = np.dot(np.dot(np.linalg.inv(np.dot(X_matrix_t, X_matrix_1)), X_matrix_t), Y_matrix)
 
     print(result_matrix)
 
-    draw(kwartal_matrix, uz_matrix, result_matrix[1][0], result_matrix[0][0])
-
-def Proper():
-    exel_data = pd.read_excel("dane.xlsx", sheet_name="Arkusz1")
-    kwartal_matrix = exel_data[["Kwartał"]].to_numpy()
-    kwartal_matrix_1 = np.insert(kwartal_matrix, 0, 1, axis=1)
-
-    zat_matrix = exel_data[["Zatrudnienie"]].to_numpy()
-    przy_matrix = exel_data[["Przychód"]].to_numpy()
-    zysk_matrix = exel_data[["Zysk"]].to_numpy()
-    uz_matrix = exel_data[["Liczba uzytkownikow"]].to_numpy()
-
+    return result_matrix[1][0], result_matrix[0][0]
 
 
 def draw(x, y, a1, a0):
@@ -58,9 +48,12 @@ def draw(x, y, a1, a0):
 
 
 def func(a1, a0, x):
-    return a1*x + a0
+    return a1 * x + a0
 
-#CHANGE HERE WHAT IDEA YOU WAHT TO COMPILE
+
 if __name__ == "__main__":
-    #Simple()
-    Proper()
+    exel_data = pd.read_excel("dane.xlsx", sheet_name="Arkusz1")
+
+    a1, a0 = create_model(exel_data[["Kwartał"]], exel_data["Liczba uzytkownikow"])
+
+    draw(exel_data[["Kwartał"]].to_numpy(), exel_data[["Liczba uzytkownikow"]].to_numpy(), a1, a0)
