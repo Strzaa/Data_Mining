@@ -130,30 +130,30 @@ if __name__ == "__main__":
     a1_lin, a0_lin, stddev_lin, r2_lin = create_model(exel_data[["Rok"]],
                                                       exel_data["Uzytkownicy-Rok"], "liniowy")
 
-    #   PRZYCHOD (LICZBA_UZ) - FUNKCJA WYKLADNICZA
+    #   ZATRUDNIENIE (LICZBA_UZ) - FUNKCJA WYKLADNICZA
     a1_wyk, a0_wyk, stdedev_wyk, r2_wyk = create_model(exel_data[["Uzytkownicy-Rok"]],
                                                        exel_data["Zatrudnienie-Rok"], "wykladniczy")
 
-    #   ZATRUDNIENIE (PRZYCHOD) - FUNKCJA LINIOWA
+    #   PRZYCHÓD (ZATRUDNIENIE) - FUNKCJA LINIOWA
     a1_lin_2, a0_lin_2, stdedev_lin_2, r2_lin_2 = create_model(exel_data[["Zatrudnienie-Rok"]],
                                                                exel_data["Przychod-Rok"], "liniowy2")
 
     #   PRZYCHOD POJEDYNCZY
     print("PRZEWIDYWANIE POJEDYNCZE")
-    #   LICZBA UZYTKOWNIKOW W PRZYSZLOSCI DLA ROKU 2019
-    print("UZYTKOWNICY W ROKU 2019: ", func_liniowa(a1_lin, a0_lin, 2019))
+    #   LICZBA UZYTKOWNIKOW DLA ROKU 2019
+    print("UZYTKOWNICY W ROKU 2022: ", func_liniowa(a1_lin, a0_lin, 2022))
 
     #   ZATRUDNIENIE NA PODSTAWIE UZYTKOWNIKÓW DLA LICZBY_UZYTKOWNIKÓW = 9000
-    print("ZATRUDNIENIE DLA LICZ. UZYTKOWNIKOW 9000: ", func_wykl(a1_wyk, a0_wyk, 9000))
+    print("ZATRUDNIENIE DLA LICZ. UZYTKOWNIKOW 9736: ", func_wykl(a1_wyk, a0_wyk, 9736))
 
     #   PRZYCHÓD NA PODSTAWIE ZATRUDNIENIA DLA ZATRUDNIENIA = 30000
-    print("PRZYCHÓD NA PODSTAWIE ZATRUDNIENIA 30 000: ", func_liniowa(a1_lin_2, a0_lin_2, 30000))
+    print("PRZYCHÓD NA PODSTAWIE ZATRUDNIENIA 86482: ", func_liniowa(a1_lin_2, a0_lin_2, 86482))
 
     #   ZATRUDNIENIE ŁĄCZONE
     print("PRZEWIDYWANIE PODWÓJNE")
-    #   PRZEWIDYWANE ZATRUDNIENIE NA PODSTAWIE ROKU 2020
-    print("ZATRUDNIENIE NA PODSTAWIE ROKU 2020: ", func_wykl(a1_wyk, a0_wyk,
-                                                             func_liniowa(a1_lin, a0_lin, 2020)))
+    #   PRZEWIDYWANE ZATRUDNIENIE NA PODSTAWIE ROKU 2019
+    print("ZATRUDNIENIE NA PODSTAWIE ROKU 2022: ", func_wykl(a1_wyk, a0_wyk,
+                                                             func_liniowa(a1_lin, a0_lin, 2022)))
 
     #   PRZYCHÓD ŁĄCZONY
     #   PRZEWIDYWANY PRZYCHÓD NA PODSTAWIE LICZBY UZYTKOWNIKOW
@@ -161,6 +161,6 @@ if __name__ == "__main__":
                                                                      func_wykl(a1_wyk, a0_wyk, 9200)))
 
     #   PRZEWIYWANIE POTRÓJNE
-    print("!!!PRZYCHÓD DLA ROKU 2019!!!", func_liniowa(a1_lin_2, a0_lin_2,
+    print("!!!PRZYCHÓD DLA ROKU 2022!!!", func_liniowa(a1_lin_2, a0_lin_2,
                                                        func_wykl(a1_wyk, a0_wyk,
-                                                        func_liniowa(a1_lin, a0_lin, 2019))))
+                                                        func_liniowa(a1_lin, a0_lin, 2022))))
