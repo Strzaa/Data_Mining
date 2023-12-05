@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.pyplot as plt
+# sklearn.metrics import r2_score
 
 liczba_obs = 250
 
@@ -29,9 +30,10 @@ def create_model(X_matrix_df, Y_table, licznik):
 
     R_2 = r_2(wyniki, Y_matrix)
 
-    print(f"MODEL_{licznik} R^2 obliczone: ", R_2)
+    print(f"MODEL_{licznik} R^2 obliczone: {np.round(R_2, 10)}")
 
-    print(f"MODEL_{licznik} R^2 skorygowane: ", 1 - (1 - R_2) * (liczba_obs - 1) / (liczba_obs - len(result_matrix) - 1 - 1))
+    R_2_better = 1 - (1 - R_2) * (liczba_obs - 1) / (liczba_obs - len(result_matrix) - 1 - 1)
+    print(f"MODEL_{licznik} R^2 skorygowane: {np.round(R_2_better, 10)}")
 
     return result_matrix, licznik + 1
 
@@ -93,9 +95,9 @@ if __name__ == "__main__":
     exel_data_X = exel_data.drop(["Pct.BF"], axis=1)
 
     licznik_corr = korelacja(exel_data_X, licznik_corr)
-    # Usuwam Hip, Chest
+    # Usuwam Hip, Chest, Waist
 
-    exel_data_X_2 = exel_data_X.drop(["Hip", "Chest"], axis=1)
+    exel_data_X_2 = exel_data_X.drop(["Hip", "Chest", "Waist"], axis=1)
 
     licznik_corr = korelacja(exel_data_X_2, licznik_corr)
     # Usuwam Weight
@@ -109,12 +111,11 @@ if __name__ == "__main__":
 
     new_data = exel_data_X_3.copy()
     new_data[["Pct.BF"]] = exel_data[["Pct.BF"]]
-    licznik_corr = korelacja(new_data,licznik_corr)
+    licznik_corr = korelacja(new_data, licznik_corr)
 
-    # usuwam Height
-    # new_data_2 = new_data.drop(["Height"], axis=1)
-    # licznik_corr = korelacja(new_data_2, licznik_corr)
+    # usuwam Height, Ankle
+    new_data_2 = new_data.drop(["Height", "Ankle"], axis=1)
+    licznik_corr = korelacja(new_data_2, licznik_corr)
 
     # zostawiam tak, sprtawdzam finalny model
-
-    list_a_3, licznik_model = create_model(exel_data_X_3.drop(["Waist"], axis=1), new_data[["Pct.BF"]], licznik_model)
+    list_a_3, licznik_model = create_model(new_data_2.drop(["Pct.BF"], axis=1), new_data[["Pct.BF"]], licznik_model)
