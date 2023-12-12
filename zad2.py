@@ -6,12 +6,8 @@
 import math
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.pyplot as plt
-# sklearn.metrics import r2_score
-
-liczba_obs = 250
 
 
 def create_model(X_matrix_df, Y_table, licznik):
@@ -32,7 +28,7 @@ def create_model(X_matrix_df, Y_table, licznik):
 
     print(f"MODEL_{licznik} R^2 obliczone: {np.round(R_2, 10)}")
 
-    R_2_better = 1 - (1 - R_2) * (liczba_obs - 1) / (liczba_obs - len(result_matrix) - 1 - 1)
+    R_2_better = 1 - (1 - R_2) * (len(X_matrix) - 1) / (len(X_matrix) - len(result_matrix) - 1 - 1)
     print(f"MODEL_{licznik} R^2 skorygowane: {np.round(R_2_better, 10)}")
 
     return result_matrix, licznik + 1
@@ -41,7 +37,7 @@ def create_model(X_matrix_df, Y_table, licznik):
 def obliczenie_wynikow(list_a, X_matrix):
     wyniki = []
     wynik = 0
-    for iter in range(0, liczba_obs):
+    for iter in range(0, len(X_matrix)):
         for element in range(len(list_a) - 1):
             wynik += list_a[element + 1][0] * X_matrix[iter][element]
         wynik += list_a[0][0]
@@ -55,7 +51,7 @@ def r_2(wyniki, y_data):
 
     licznik = 0
     mianownik = 0
-    for iter in range(0, liczba_obs):
+    for iter in range(0, len(y_data)):
         licznik += ((y_data[iter] - wyniki[iter]) ** 2)
         mianownik += ((y_data[iter] - y_sr) ** 2)
     return 1 - (licznik / mianownik)
@@ -83,12 +79,34 @@ def korelacja(data, licznik):
     return licznik + 1
 
 
+def podzial(data):
+    liczba = len(data)
+
+    ostatnie_20 = data.iloc[liczba - 20 :]
+    pozostala_czesc = data.iloc[: liczba - 20]
+
+    return pozostala_czesc, ostatnie_20
+
+
+def sprawdzenie(exel_data_test, list_a_4):
+    data_no_y = np.array(exel_data_test.drop(["Pct.BF"], axis=1))
+    data = pd.DataFrame(exel_data_test)
+    wyniki = obliczenie_wynikow(list_a_4, data_no_y)
+    sr_blad = 0
+    for y in range(0, len(wyniki)):
+        sr_blad += (data.loc[y + 230, "Pct.BF"] - wyniki[y]) ** 2
+
+    return math.sqrt(sr_blad)
+
+
 if __name__ == "__main__":
     licznik_model = 0
     licznik_corr = 0
 
     #   ZAŁADOWANIE EXEL
-    exel_data = pd.read_excel("dane.xlsx", sheet_name="Arkusz2")
+    exel_data_raw = pd.read_excel("dane.xlsx", sheet_name="Arkusz2")
+
+    exel_data, exel_data_test = podzial(exel_data_raw)
 
     list_a_1, licznik_model = create_model(exel_data.drop(["Pct.BF"], axis=1), exel_data[["Pct.BF"]], licznik_model)
 
@@ -98,12 +116,10 @@ if __name__ == "__main__":
     # Usuwam Hip, Chest, Waist
 
     exel_data_X_2 = exel_data_X.drop(["Hip", "Chest", "Waist"], axis=1)
-
     licznik_corr = korelacja(exel_data_X_2, licznik_corr)
     # Usuwam Weight
 
     exel_data_X_3 = exel_data_X_2.drop(["Weight"], axis=1)
-
     licznik_corr = korelacja(exel_data_X_3, licznik_corr)
     # zostawiam tak, sprawdzam r^2
 
@@ -117,5 +133,21 @@ if __name__ == "__main__":
     new_data_2 = new_data.drop(["Height", "Ankle"], axis=1)
     licznik_corr = korelacja(new_data_2, licznik_corr)
 
-    # zostawiam tak, sprtawdzam finalny model
+    # zostawiam tak, sprtawdzam model
     list_a_3, licznik_model = create_model(new_data_2.drop(["Pct.BF"], axis=1), new_data[["Pct.BF"]], licznik_model)
+
+    # usuwam Age, Forearm, Wrist, Neck, Bicep, Knee
+    new_data_3 = new_data_2.drop(["Age", "Forearm", "Wrist", "Neck", "Bicep", "Knee"], axis=1)
+    licznik_corr = korelacja(new_data_3, licznik_corr)
+
+    # sprawdzam model
+    list_a_4, licznik_model = create_model(new_data_3.drop(["Pct.BF"], axis=1), new_data[["Pct.BF"]], licznik_model)
+    print(list_a_4)
+
+    # obliczenie blędów
+    sredni_blad = sprawdzenie(exel_data_test.drop(["Age", "Forearm", "Wrist", "Neck", "Bicep", "Knee",
+                                                   "Height", "Ankle", "Weight", "Hip", "Chest", "Waist"], axis=1), list_a_4)
+    print("Średni bląd modelu przygotowanego: ", sredni_blad)
+
+    sredni_blad = sprawdzenie(exel_data_test, list_a_1)
+    print("Średni bląd modelu surowego: ", sredni_blad)
