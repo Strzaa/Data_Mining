@@ -98,13 +98,13 @@ def podzial(data):
     return pozostala_czesc, ostatnie_20
 
 
-def sprawdzenie(exel_data_test, list_a_4):
-    data_no_y = np.array(exel_data_test.drop(["Pct.BF"], axis=1))
+def sprawdzenie(exel_data_test, list_a_4, name):
+    data_no_y = np.array(exel_data_test.drop([name], axis=1))
     data = pd.DataFrame(exel_data_test)
     wyniki = obliczenie_wynikow(list_a_4, data_no_y)
     sr_blad = 0
     for y in range(0, len(wyniki)):
-        sr_blad += (data.loc[y + 230, "Pct.BF"] - wyniki[y]) ** 2
+        sr_blad += (data.loc[y + 230, name] - wyniki[y]) ** 2
 
     return math.sqrt(sr_blad)
 
@@ -153,8 +153,52 @@ if __name__ == "__main__":
     print(list_a_2)
 
     # obliczenie blędów
-    sredni_blad = sprawdzenie(exel_data_test, list_a_1)
+    sredni_blad = sprawdzenie(exel_data_test, list_a_1, "Pct.BF")
     print("Średni bląd modelu surowego: ", sredni_blad)
 
-    sredni_blad = sprawdzenie(exel_data_test[["Density","Pct.BF"]], list_a_2)
+    sredni_blad = sprawdzenie(exel_data_test[["Density", "Pct.BF"]], list_a_2, "Pct.BF")
+    print("Średni bląd modelu przygotowanego: ", sredni_blad)
+
+    ################# BICEP #################################
+
+    exel_data, exel_data_test = podzial(exel_data_raw)
+
+    licznik_model = 10
+    licznik_corr = 10
+
+    licznik_corr = korelacja(exel_data, licznik_corr)
+
+    list_a_1, licznik_model = create_model(exel_data.drop(["Bicep"], axis=1), exel_data[["Bicep"]], licznik_model)
+
+    # XY
+    # usuwam Age
+    exel_data_2 = exel_data.drop(["Age"], axis=1)
+    licznik_corr = korelacja(exel_data_2, licznik_corr)
+
+    # XX
+    # usuwam Height, Ankle, Pct.BF, Density
+    exel_data_3 = exel_data_2.drop(["Height","Ankle","Pct.BF","Density"], axis=1)
+    licznik_corr = korelacja(exel_data_3, licznik_corr)
+
+    # usuwam Wrist, Abdomen, Waist, Neck
+    exel_data_4 = exel_data_3.drop(["Wrist","Abdomen","Waist","Neck"], axis=1)
+    licznik_corr = korelacja(exel_data_4, licznik_corr)
+
+    list_a_2, licznik_model = create_model(exel_data_4.drop(["Bicep"], axis=1), exel_data[["Bicep"]], licznik_model)
+
+    # usuwam Forearm, Knee
+    exel_data_5 = exel_data_4.drop(["Forearm", "Knee"], axis=1)
+    licznik_corr = korelacja(exel_data_5, licznik_corr)
+
+    list_a_3, licznik_model = create_model(exel_data_5.drop(["Bicep"], axis=1), exel_data[["Bicep"]], licznik_model)
+
+    # zostawiam MODEL_11
+    # sprawdam model
+    print(list_a_2)
+
+    # obliczenie blędów
+    sredni_blad = sprawdzenie(exel_data_test, list_a_1, "Bicep")
+    print("Średni bląd modelu surowego: ", sredni_blad)
+
+    sredni_blad = sprawdzenie(exel_data_test[["Weight","Chest","Hip","Thigh","Knee","Forearm","Bicep"]], list_a_2, "Bicep")
     print("Średni bląd modelu przygotowanego: ", sredni_blad)
