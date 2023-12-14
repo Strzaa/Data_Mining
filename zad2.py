@@ -2,17 +2,24 @@
 #   MODEL WIELOKRYTERIALNY
 #   Y(X1, ..., X13) = A0 + A1X1 + ... + A13X13
 #   Y(X1, ..., X13) - Pct.BF
+#   Zrobi najpierw X z Y a pozniej X z X. Bierzemy pod uwage r graniczne
 
 import math
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.metrics import r2_score
+from scipy.stats import t
 
 
 def create_model(X_matrix_df, Y_table, licznik):
+    ###
     X_matrix = X_matrix_df.to_numpy()
     Y_matrix = Y_table.to_numpy()
+
+    X_matrix = X_matrix.astype(float)
+    Y_matrix = Y_matrix.astype(float)
 
     X_matrix_1 = np.insert(X_matrix, 0, 1, axis=1)
 
@@ -31,6 +38,9 @@ def create_model(X_matrix_df, Y_table, licznik):
     R_2_better = 1 - (1 - R_2) * (len(X_matrix) - 1) / (len(X_matrix) - len(result_matrix) - 1 - 1)
     print(f"MODEL_{licznik} R^2 skorygowane: {np.round(R_2_better, 10)}")
 
+    # R_2_bib = r2_score(Y_matrix, np.dot(X_matrix_1, result_matrix))
+    # print("Biblioteka: ", R_2_bib)
+
     return result_matrix, licznik + 1
 
 
@@ -38,7 +48,7 @@ def obliczenie_wynikow(list_a, X_matrix):
     wyniki = []
     wynik = 0
     for iter in range(0, len(X_matrix)):
-        for element in range(len(list_a) - 1):
+        for element in range(0, len(list_a) - 1):
             wynik += list_a[element + 1][0] * X_matrix[iter][element]
         wynik += list_a[0][0]
         wyniki.append(wynik)
@@ -99,6 +109,11 @@ def sprawdzenie(exel_data_test, list_a_4):
     return math.sqrt(sr_blad)
 
 
+def oblicz_r(data):
+    t_value = t.ppf(0.05, len(data))
+    return math.sqrt((t_value ** 2)/(t_value ** 2 + len(data) - 2))
+
+
 if __name__ == "__main__":
     licznik_model = 0
     licznik_corr = 0
@@ -108,46 +123,38 @@ if __name__ == "__main__":
 
     exel_data, exel_data_test = podzial(exel_data_raw)
 
+    # R_graniczne dla a = 0.05
+    r_graniczne = oblicz_r(exel_data_raw)
+    print("R_graniczne: ", r_graniczne)
+
     list_a_1, licznik_model = create_model(exel_data.drop(["Pct.BF"], axis=1), exel_data[["Pct.BF"]], licznik_model)
 
-    exel_data_X = exel_data.drop(["Pct.BF"], axis=1)
+    licznik_corr = korelacja(exel_data, licznik_corr)
+    # XY
+    # usuwam Height
+    exel_data_2 = exel_data.drop(["Height"], axis=1)
+    licznik_corr = korelacja(exel_data_2, licznik_corr)
 
-    licznik_corr = korelacja(exel_data_X, licznik_corr)
-    # Usuwam Hip, Chest, Waist
+    # XX
+    # usuwam Age, Ankle, Wrist, Forearm
+    exel_data_3 = exel_data_2.drop(["Age", "Ankle", "Wrist", "Forearm"], axis=1)
+    licznik_corr = korelacja(exel_data_3, licznik_corr)
 
-    exel_data_X_2 = exel_data_X.drop(["Hip", "Chest", "Waist"], axis=1)
-    licznik_corr = korelacja(exel_data_X_2, licznik_corr)
-    # Usuwam Weight
+    # usuwam Bicep, Knee, Neck, Thigh
+    exel_data_4 = exel_data_3.drop(["Bicep", "Knee", "Neck", "Thigh"], axis=1)
+    licznik_corr = korelacja(exel_data_4, licznik_corr)
 
-    exel_data_X_3 = exel_data_X_2.drop(["Weight"], axis=1)
-    licznik_corr = korelacja(exel_data_X_3, licznik_corr)
-    # zostawiam tak, sprawdzam r^2
+    # usuwam Hip, Waist, Adbomen, Chest, Weight
+    exel_data_5 = exel_data_4.drop(["Hip", "Waist", "Abdomen", "Chest", "Weight"], axis=1)
 
-    list_a_2, licznik_model = create_model(exel_data_X_3, exel_data[["Pct.BF"]], licznik_model)
-
-    new_data = exel_data_X_3.copy()
-    new_data[["Pct.BF"]] = exel_data[["Pct.BF"]]
-    licznik_corr = korelacja(new_data, licznik_corr)
-
-    # usuwam Height, Ankle
-    new_data_2 = new_data.drop(["Height", "Ankle"], axis=1)
-    licznik_corr = korelacja(new_data_2, licznik_corr)
-
-    # zostawiam tak, sprtawdzam model
-    list_a_3, licznik_model = create_model(new_data_2.drop(["Pct.BF"], axis=1), new_data[["Pct.BF"]], licznik_model)
-
-    # usuwam Age, Forearm, Wrist, Neck, Bicep, Knee
-    new_data_3 = new_data_2.drop(["Age", "Forearm", "Wrist", "Neck", "Bicep", "Knee"], axis=1)
-    licznik_corr = korelacja(new_data_3, licznik_corr)
+    list_a_2, licznik_model = create_model(exel_data_5.drop(["Pct.BF"], axis=1), exel_data[["Pct.BF"]], licznik_model)
 
     # sprawdzam model
-    list_a_4, licznik_model = create_model(new_data_3.drop(["Pct.BF"], axis=1), new_data[["Pct.BF"]], licznik_model)
-    print(list_a_4)
+    print(list_a_2)
 
     # obliczenie blędów
-    sredni_blad = sprawdzenie(exel_data_test.drop(["Age", "Forearm", "Wrist", "Neck", "Bicep", "Knee",
-                                                   "Height", "Ankle", "Weight", "Hip", "Chest", "Waist"], axis=1), list_a_4)
-    print("Średni bląd modelu przygotowanego: ", sredni_blad)
-
     sredni_blad = sprawdzenie(exel_data_test, list_a_1)
     print("Średni bląd modelu surowego: ", sredni_blad)
+
+    sredni_blad = sprawdzenie(exel_data_test[["Density","Pct.BF"]], list_a_2)
+    print("Średni bląd modelu przygotowanego: ", sredni_blad)
